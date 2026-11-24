@@ -7,10 +7,14 @@ lo que se instala en los servidores es una etiqueta suya: `udl-AAAA.MM.DD`.
 - Remotos: `origin` = `syalia-srl/aegis` (upstream), `fork` = `UDLDavid/aegis`.
 - Base de esta serie: `origin/main` = `a2c8d5ed` (349 commits por delante de
   `v2.22.0`; upstream todavía no etiqueta 3.x, así que la «3.x» es `main`).
-- Tamaño: 27 commits, 64 ficheros, +3.725 / −188.
+- Tamaño: 27 commits, 64 ficheros, +3.725 / −188 (series A y B), más la serie C
+  (1 commit, 9 ficheros, +170 / −4).
 - PRs: **#1114** `pool-attribution`, abierto — «A session's pool, not its
   harness, decides whose account it spends». **#1115** `pool-connection`,
   draft — «A claude-code agent on an account of its own: the connection».
+  **#1136** `fix/message-delta-context`, abierto (issue #1135) — «take a
+  session's context from the message_delta when assistant lines say 0»; sale de
+  `origin/main`, no depende de A ni de B.
 - Los mensajes de los commits citan también #1113, que es el PR de origen de la
   serie; no es de este fork.
 
@@ -79,11 +83,22 @@ solo puede gastar la cuenta de Claude.
 | `4b9eca6d` | el transcript no pone dólares a un turno de conexión | `tests/test_fold.py` |
 | `69a882fa` | el journal reconstruye el uso de una sesión desde su spawn | `tests/test_usage_e2e.py` |
 
+### C. El contexto de una sesión con otro endpoint — rama `fix/message-delta-context`, PR #1136
+
+Qué se rompe sin esto: con una conexión (OpenCode Go) todas las líneas
+`assistant` traen `usage` a 0 y el contexto de la ficha se queda en 0; el uso
+real solo viene en el `message_delta` de cada llamada. Va aparte de A y B: sale
+de `origin/main` y se aplica encima de ellas con `cherry-pick`.
+
+| commit | qué hace | prueba |
+| --- | --- | --- |
+| `cfd027b4` | el contexto sale del `message_delta`; una línea `assistant` a 0 no lo borra; respaldo con `get_context_usage` (`summary`) | `tests/test_claude_partial.py tests/test_session.py tests/test_control.py` |
+
 ## Desplegar
 
 ```bash
 # 1. En el repo: etiquetar (solo si cambió la serie)
-git switch udl/deploy && git merge --ff-only pool-connection
+git switch udl/deploy && git merge --ff-only udl/deploy-next   # pool-connection + serie C
 git tag -a udl-2026.11.23 -m "build desplegado en udl-HP-Laptop-14-fq1xxx y vps"
 git push fork udl/deploy && git push fork udl-2026.11.23
 
